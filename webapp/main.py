@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import osmnx as ox
 from flask_socketio import SocketIO, emit
-from sitl.controler import DroneController 
+# from sitl.controler import DroneController
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -29,21 +29,27 @@ def get_mission_data():
     pass
 
 
+
+@app.route('/draw-rectangle', methods=['POST'])
+def draw_rectangle():
+    # Get the rectangle data sent from the client
+    data = request.get_json()
+
+    # Extract top-left and bottom-right coordinates
+    top_left = data.get('topLeft')
+    bottom_right = data.get('bottomRight')
+
+    print(f"Rectangle received: Top-Left = {top_left}, Bottom-Right = {bottom_right}")
+
+    # Process or store the coordinates (e.g., in a database)
+
+    # Respond to the client
+    return jsonify({"message": "Rectangle received successfully!", "topLeft": top_left, "bottomRight": bottom_right})
+
+
 @socketio.on("add_point")
 def add_point(point):
-    # mission_data.append(point)
-    controler = DroneController()
-    # lat=54.34712607259228
-    # lon=18.63670854829568
-    lat=point['point']['lat']
-    lon=point['point']['lng']
-    alt = 100
 
-    controler.from_disarm_to_point(70, lat, lon, alt)
-    input("alskdjf")
-    lat = 54.35434358145789
-    lon = 18.594050652439748
-    controler.from_disarm_to_point(70, lat, lon, alt)
     print(point)
     point = []
     emit('point_response', {'point': point})
