@@ -9,7 +9,7 @@ const socket = io.connect('http://' + document.domain + ':' + location.port);
 
 
     var startDronesBtn = document.getElementById('start_drones');
-    var addPointsBtn = document.getElementById('add-points');
+//    var addPointsBtn = document.getElementById('add-points');
 
 
     function onMapClick(e) {
@@ -41,15 +41,7 @@ map.on("click", onMapClick);
         });
     });
 
-    addPointsBtn.addEventListener('click', function() {
-        console.log("Add point clicked!");
 
-        socket.emit('start_drones_event', { message: 'Start the drones' });
-
-        socket.on('drone_response', function(data) {
-            document.getElementById('result').textContent = data.message;
-        });
-    });
 
 
 
