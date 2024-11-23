@@ -1,23 +1,34 @@
 from Map import Map
+import math
+from utils import haversine
 
 class Drone:
-    def __init__(self, drone_id):
+    def __init__(self, drone_id, camerAngle = 90):
         self.drone_id = drone_id
-        self.nodes = []  # List of coordinates for the flight path
-        self.map = map;
+        self.nodes = []
+        self.map = None
     def setMap(self, map):
         if  not isinstance(map, Map):
             return
 
         self.map = map
-
-    def setViewBox(self, altitude):
-
+    def setViewBox(self, altitude, cameraAngle):
+        cameraAngle_rad = math.radians(cameraAngle)
+        width = math.tan(cameraAngle_rad) * altitude * 2
+        height = math.tan(cameraAngle_rad) * altitude * 2
+        self.viewbox = (width, height)
 
     def get_viewbox_area(self):
-        """Calculate the area covered by the viewbox."""
         width, height = self.viewbox
         area = width * height
-        print(f"Drone {self.drone_id}'s viewbox covers an area of {area} square units.")
         return area
-
+    def get_map_area(self):
+        if( not isinstance(self.map, Map)) :
+            return
+        bottomRight = self.map.get_bottom_right()
+        bottomLeft  = self.map.get_bottom_left()
+        topLeft = self.map.get_top_left()
+        topRight = self.map.get_top_right()
+        height = haversine(bottomRight[0], bottomRight[1], topRight[0], topRight[1])
+        width = haversine(bottomLeft[0], bottomLeft[1], bottomRight[1], bottomRight[1])
+        return height*width
