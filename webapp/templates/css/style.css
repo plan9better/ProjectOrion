@@ -1,0 +1,98 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+.floating-ui {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-family: Arial, sans-serif;
+  width: 300px;
+}
+
+#drone-list {
+  left: 10px;
+}
+
+/* Drone Item Styling */
+.drone-item {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 6px 0;
+  background: #f9f9f9;
+  font-size: 14px;
+}
+
+/* Floating UI - Hidden State */
+.hidden {
+  display: none;
+}
+
+/* Button Styles */
+button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Input Fields */
+input {
+  width: 100%;
+  padding: 8px;
+  margin: 4px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Drone Status List */
+#drone-status {
+  margin-top: 12px;
+  list-style: none;
+  padding: 0;
+}
+
+#drone-status li {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 4px 0;
+  background: #f9f9f9;
+}
+
+/* Action Menu Position */
+#action-menu {
+  top: 10px;
+  right: 10px;
+  left: auto;
+}
