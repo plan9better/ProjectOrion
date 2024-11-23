@@ -9,12 +9,13 @@ def generate_nodes(coordinate1: tuple, coordinate2: tuple, no_drones: int, altit
     map1.set_corners()
     drones = []
     for id in (altitude.keys()):
-        drones.append(Drone(id))
+        drone = Drone(id)
+        drone.setViewBox(altitude[id], 90)
+        drones.append(drone)
     set_map_for_drone(map1, drones)
     return_nodes = {}
     for drone in (drones):
-        drone.setViewBox(altitude[drone.drone_id], 90)
-        return_nodes[drone.drone_id] = setNodes(drone.map,drone.viewbox)
+        return_nodes[drone.drone_id] = setNodes(drone.map, drone.viewbox)
     return return_nodes
 
 
@@ -46,4 +47,4 @@ if __name__ == '__main__':
     map = Map((54.515264385561615, 18.545395708475173),(54.513271396309584, 18.539623594789287))
     map.set_corners()
     # print(setNodes(map, (100,100)))
-    print(generate_nodes((54.515264385561615, 18.545395708475173),(54.513271396309584, 18.539623594789287),3,{1 : 100, 2 : 100, 3: 100}))
+    print(generate_nodes((54.515264385561615, 18.545395708475173),(54.513271396309584, 18.539623594789287),1,{1 : 1000, 2 : 100, 3: 1000}))

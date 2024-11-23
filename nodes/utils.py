@@ -8,6 +8,7 @@ def set_map_for_drone(drone_map: Map, drones: list):
         drone_top_left = drone_map.top_left[0], drone_map.top_left[1] + i*drone_field_width
         drone_bottom_right = drone_map.bottom_right[0], drone_map.top_left[1] +(i+1)*drone_field_width
         drone_map_new = Map(drone_top_left, drone_bottom_right)
+        drone_map_new.set_corners()
         drone.setMap(drone_map_new)
 
 def haversine(lat1, lon1, lat2, lon2):
