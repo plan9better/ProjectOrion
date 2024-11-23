@@ -2,6 +2,10 @@
 
 import Drone from "./Drone.js";
 
+
+
+
+
 export default class DroneManager {
   drones = [];
 

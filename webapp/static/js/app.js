@@ -2,10 +2,14 @@
 
 import DroneManager from "./bussines/droneSystems/DroneManager.js";
 
+
+
+
+
 let map = L.map("map", { zoomControl: false }).setView(
   [54.352433, 18.647782],
   16
-); // Default center and zoom
+);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19,
   attribution: "&copy; OpenStreetMap contributors",
@@ -33,13 +37,25 @@ const exampleDroneJSON = [
     isSelected: false,
     altitude: 0,
   },
+    {
+    id: 4,
+    name: "Drone Delta",
+    battery: 100,
+    isSelected: false,
+    altitude: 0,
+  },
 ];
 
 const droneManager = new DroneManager();
-droneManager.createDronesFromJSON(exampleDroneJSON);
-droneManager.renderDrones("drone-status");
+const socket = io.connect('http://' + document.domain + ':' + location.port);
+socket.on('drone_info', function(data) {
+    console.log("Received updated drone info:", data);
 
-console.log(droneManager.toJSON());
+    // Use the existing droneManager methods to process and display the drone data
+    droneManager.createDronesFromJSON(data);  // Create or update drones
+    droneManager.renderDrones("drone-status");  // Render drones in the specified container
+});
+
 
 let popup = L.popup();
 
