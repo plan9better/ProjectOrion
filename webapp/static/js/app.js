@@ -4,6 +4,71 @@ import DroneManager from "./bussines/droneSystems/DroneManager.js";
 
 
 
+document.addEventListener('DOMContentLoaded', function () {
+const socket = io.connect('http://' + document.domain + ':' + location.port);
+
+
+    var startDronesBtn = document.getElementById('start_drones');
+    var addPointsBtn = document.getElementById('add-points');
+
+        function onMapClick(e) {
+  popup
+    .setLatLng(e.latlng)
+    .setContent("You clicked the map at " + e.latlng.toString())
+    .openOn(map);
+}
+
+map.on("click", onMapClick);
+    
+
+
+
+
+
+
+    startDronesBtn.addEventListener('click', function() {
+        console.log("Start Drones button clicked!");
+
+        socket.emit('send_drones', { message: 'Start the drones' });
+
+        socket.on('drone_response', function(data) {
+                    console.log("Response received!");
+
+        });
+    });
+
+    addPointsBtn..addEventListener('click', function() {
+        console.log("Add point clicked!");
+
+        socket.emit('start_drones_event', { message: 'Start the drones' });
+
+        socket.on('drone_response', function(data) {
+            document.getElementById('result').textContent = data.message;
+        });
+    });
+
+
+
+
+    const droneManager = new DroneManager();
+
+    socket.on('drone_info', function(data) {
+    console.log("Received updated drone info:", data);
+
+    droneManager.createDronesFromJSON(data);
+    droneManager.renderDrones("drone-status");
+
+
+
+
+
+
+
+});
+
+
+});
+
 
 
 let map = L.map("map", { zoomControl: false }).setView(
@@ -15,55 +80,10 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
-const exampleDroneJSON = [
-  {
-    id: 1,
-    name: "Drone Alpha",
-    battery: 100,
-    isSelected: false,
-    altitude: 0,
-  },
-  {
-    id: 2,
-    name: "Drone Beta",
-    battery: 100,
-    isSelected: false,
-    altitude: 0,
-  },
-  {
-    id: 3,
-    name: "Drone Gamma",
-    battery: 100,
-    isSelected: false,
-    altitude: 0,
-  },
-    {
-    id: 4,
-    name: "Drone Delta",
-    battery: 100,
-    isSelected: false,
-    altitude: 0,
-  },
-];
 
-const droneManager = new DroneManager();
-const socket = io.connect('http://' + document.domain + ':' + location.port);
-socket.on('drone_info', function(data) {
-    console.log("Received updated drone info:", data);
 
-    // Use the existing droneManager methods to process and display the drone data
-    droneManager.createDronesFromJSON(data);  // Create or update drones
-    droneManager.renderDrones("drone-status");  // Render drones in the specified container
-});
 
 
 let popup = L.popup();
 
-function onMapClick(e) {
-  popup
-    .setLatLng(e.latlng)
-    .setContent("You clicked the map at " + e.latlng.toString())
-    .openOn(map);
-}
 
-map.on("click", onMapClick);

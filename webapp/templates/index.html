@@ -31,7 +31,10 @@
       <label for="point-select">Select Points:</label>
       <button id="add-point">Add Point</button>
       <button id="add-area">Select Area</button>
-      <button id="send-data">Submit Plan</button>
+
+
+      <button id="start_drones">Start drones</button>
+
     </div>
 
     <!-- Action Menu -->
@@ -53,9 +56,9 @@
 <!--        {  }-->
 <!--    </script>-->
 
-        <flsk id="flsk" data-test-ss="{{ test_ss | tojson }}"></flsk>
 
 
-    <script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <script defer type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>
 </html>

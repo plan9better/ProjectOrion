@@ -5,7 +5,9 @@ from flask_socketio import SocketIO, emit
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+mission_data = []
 
+point = [0,0]
 
 def start_mission():
     #algos.get_drones_data()
@@ -22,14 +24,19 @@ def index():
 
 @app.route("/mission_data")
 def get_mission_data():
+    # nodes_list = cacluclate_points(altitude,no_drones,starting posints,mission_coordinates)
     pass
 
-@socketio.on('broadcast')
-def update_map():
-    emit({"drones" : "2"})
 
-def send_drones():
-    pass
+@socketio.on("add_point")
+def add_point():
+    # mission_data.append(point)
+    point = []
+
+@socketio.on("send_drones")
+def send_drones(data):
+    print("the drones have been sent")
+    emit('drone_response', {'message': 'The drones have been sent successfully!'})
 
 @socketio.on('connect')
 def handle_connect():
