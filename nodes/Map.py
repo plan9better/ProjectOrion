@@ -2,8 +2,8 @@ class Map:
     def __init__(self, top_left: tuple, bottom_right: tuple):
         self.top_left = top_left
         self.bottom_right = bottom_right
-        self.top_right = tuple
-        self.bottom_left = tuple
+        self.top_right = None
+        self.bottom_left = None
 
     def set_corners(self):
         self.top_right = (self.bottom_right[0], self.top_left[1])
