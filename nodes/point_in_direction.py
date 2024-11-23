@@ -34,8 +34,13 @@ def rad_to_deg(rad):
     return rad * (180 / math.pi)
 
 
-def calculate_new_coordinates(lat1, lon1, distance, heading):
+def calculate_new_coordinates(point1: tuple,point2: tuple, distance):
     # Convert the initial point from degrees to radians
+    lat1=point1[0]
+    lon1=point1[1]
+    lat2=point2[0]
+    lon2=point2[1]
+    heading=calculate_bearing(point1[0], point1[1], point2[0], point2[1])
     R = 6371.0
     lat1_rad = deg_to_rad(lat1)
     lon1_rad = deg_to_rad(lon1)
@@ -54,14 +59,15 @@ def calculate_new_coordinates(lat1, lon1, distance, heading):
     return (new_lat, new_lon)
 
 
-lat1 = 54.51511951567858   # Latitude of the starting point (in degrees)
-lon1 = 18.542232924301757
-lat2 = 54.51334852658739  # Latitude of the starting point (in degrees)
-lon2 = 18.544687602856936
-distance = 0.2# Distance to move (in kilometers)
-heading = calculate_bearing(lat1, lon1, lat2, lon2)  # Heading (in degrees, 0° is North, 90° is East, etc.)
+# lat1 = 54.51511951567858   # Latitude of the starting point (in degrees)
+# lon1 = 18.542232924301757
+# lat2 = 54.51334852658739  # Latitude of the starting point (in degrees)
+# lon2 = 18.544687602856936
+# point1 = (lat1, lon1)
+# point2 = (lat2, lon2)
+# distance = 0.2# Distance to move (in kilometers)
 
-newPoint = calculate_new_coordinates(lat1, lon1, distance, heading)
-print(newPoint[0], newPoint[1])
+# newPoint = calculate_new_coordinates(point1, point2, distance)
+# print(newPoint[0], newPoint[1])
 
 #54.515576,18.548518
