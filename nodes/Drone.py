@@ -2,6 +2,8 @@ from Map import Map
 import math
 from utils import haversine
 
+
+
 class Drone:
     def __init__(self, drone_id, camerAngle = 90):
         self.drone_id = drone_id
@@ -13,7 +15,7 @@ class Drone:
 
         self.map = map
     def setViewBox(self, altitude, cameraAngle):
-        cameraAngle_rad = math.radians(cameraAngle)
+        cameraAngle_rad = math.radians(cameraAngle/2)
         width = math.tan(cameraAngle_rad) * altitude * 2
         height = math.tan(cameraAngle_rad) * altitude * 2
         self.viewbox = (width, height)
@@ -32,3 +34,9 @@ class Drone:
         height = haversine(bottomRight[0], bottomRight[1], topRight[0], topRight[1])
         width = haversine(bottomLeft[0], bottomLeft[1], bottomRight[1], bottomRight[1])
         return height*width
+
+    def createNodes(self):
+        limitRight = self.map.get_top_right()
+        limitBottom = self.map.get_bottom_left()
+
+
