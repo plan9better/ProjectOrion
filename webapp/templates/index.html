@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drone Routing System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+  </head>
+      <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <body>
+    <div id="map"></div>
+
+    <div id="drone-list" class="floating-ui">
+      <h2>Aviable drones</h2>
+      <ul id="drone-status"></ul>
+          <div id="droneInfo">
+        <!-- Drone info will be displayed here -->
+    </div>
+    </div>
+
+    <!-- Planning Menu -->
+    <div id="planning-menu" class="floating-ui">
+      <h2>Planning</h2>
+      <label for="point-select">Select Points:</label>
+      <button id="add-point">Add Point</button>
+      <button id="add-area">Select Area</button>
+
+
+      <button id="start_drones">Start drones</button>
+
+    </div>
+
+    <!-- Action Menu -->
+    <div id="action-menu" class="floating-ui hidden">
+      <h2>Action Menu</h2>
+      <button id="start-simulation">Launch Drones</button>
+      <ul id="drone-status">
+        <!-- Dynamic content will be added here -->
+      </ul>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+<!--    <script type="application/json" id="flask-data">-->
+<!--        {  }-->
+<!--    </script>-->
+
+
+
+
+    <script defer type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>
