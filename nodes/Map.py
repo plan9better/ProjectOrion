@@ -6,8 +6,8 @@ class Map:
         self.bottom_left = None
 
     def set_corners(self):
-        self.top_right = (self.bottom_right[0], self.top_left[1])
-        self.bottom_left = (self.top_left[0], self.bottom_right[1])
+        self.bottom_left = (self.bottom_right[0], self.top_left[1])
+        self.top_right = (self.top_left[0], self.bottom_right[1])
 
     def get_top_left(self):
         return self.top_left
