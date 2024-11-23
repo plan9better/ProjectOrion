@@ -29,9 +29,12 @@ def get_mission_data():
 
 
 @socketio.on("add_point")
-def add_point():
+def add_point(point):
     # mission_data.append(point)
+    print(point)
     point = []
+    emit('drone_response', {'message': 'The drones have been sent successfully!'})
+
 
 @socketio.on("send_drones")
 def send_drones(data):

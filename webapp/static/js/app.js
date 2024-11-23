@@ -11,17 +11,21 @@ const socket = io.connect('http://' + document.domain + ':' + location.port);
     var startDronesBtn = document.getElementById('start_drones');
     var addPointsBtn = document.getElementById('add-points');
 
-        function onMapClick(e) {
+
+    function onMapClick(e) {
   popup
     .setLatLng(e.latlng)
     .setContent("You clicked the map at " + e.latlng.toString())
     .openOn(map);
+    socket.emit('add_point', { point: e.latlng });
+      socket.on('point_response', function(data) {
+                    console.log("point received!");
+                    console.log(data.point)
+
+        });
 }
 
 map.on("click", onMapClick);
-    
-
-
 
 
 
@@ -37,7 +41,7 @@ map.on("click", onMapClick);
         });
     });
 
-    addPointsBtn..addEventListener('click', function() {
+    addPointsBtn.addEventListener('click', function() {
         console.log("Add point clicked!");
 
         socket.emit('start_drones_event', { message: 'Start the drones' });
@@ -57,13 +61,6 @@ map.on("click", onMapClick);
 
     droneManager.createDronesFromJSON(data);
     droneManager.renderDrones("drone-status");
-
-
-
-
-
-
-
 });
 
 
