@@ -29,7 +29,6 @@ def get_mission_data():
     pass
 
 
-
 @app.route('/draw-rectangle', methods=['POST'])
 def draw_rectangle():
     # Get the rectangle data sent from the client
