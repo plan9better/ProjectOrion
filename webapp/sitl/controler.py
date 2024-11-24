@@ -604,3 +604,19 @@ if __name__=="__main__":
     asyncio.run(start_websocket_server())
     for thread in threads:
         thread.join()
+
+def good_name(paths, n):
+    threads = []
+    for i in range(n):
+        threads.append(threading.Thread(target=pass_coords_start_waypoints, args=(paths[i],i,)))
+        # pass_coords_start_waypoints(paths[i], i)
+
+    # threads.append(threading.Thread(target=start_websocket_server))
+    for thread in threads:
+        thread.start()
+    # while True:
+    #     print(positions)
+    #     time.sleep(1)
+    asyncio.run(start_websocket_server())
+    for thread in threads:
+        thread.join()
