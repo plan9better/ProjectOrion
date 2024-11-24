@@ -2,6 +2,7 @@ from pymavlink import mavutil
 import time
 import math
 from math import radians, cos, sin, sqrt, atan2
+import sys
 
 class DroneController:
     def __init__(self, connection_string="udp:127.0.0.1:14550"):
@@ -338,18 +339,227 @@ class DroneController:
         self.land()
         self.disarm()
 
-def main():
-    controler = DroneController()
-    lat=54.34712607259228
-    lon=18.63670854829568
-    alt = 100
-    controler.from_disarm_to_point(70, lat, lon, alt)
-    input("alskdjf")
-    lat = 54.35434358145789
-    lon = 18.594050652439748
-    controler.from_disarm_to_point(70, lat, lon, alt)
+    def pre_arm_checks_passed(self):
+        """
+        Verify pre-arm checks by monitoring system status and health.
+        """
+        print("Checking pre-arm status...")
+        # Request system status
+        self.master.mav.command_long_send(
+            self.master.target_system,
+            self.master.target_component,
+            mavutil.mavlink.MAV_CMD_REQUEST_MESSAGE,
+            0,  # Confirmation
+            mavutil.mavlink.MAVLINK_MSG_ID_SYS_STATUS,
+            0, 0, 0, 0, 0, 0,
+        )
+        i = 0
+        while True:
+            msg = self.master.recv_match(type="SYS_STATUS", blocking=True, timeout=5)
+            if not msg:
+                print("Timeout waiting for SYS_STATUS.")
+                continue
+
+            sensors_health = msg.onboard_control_sensors_health
+            sensors_present = msg.onboard_control_sensors_present
+
+            # Ensure all required sensors are healthy
+            if sensors_health & sensors_present == sensors_present:
+                print("Pre-arm checks passed: All required sensors are healthy.")
+                return True
+            else:
+                # print(f"Pre-arm checks failed: Sensor health bitmask: {bin(sensors_health)}")
+                print('.' * ((i%3) + 1))
+                print(bin(sensors_health), bin(sensors_present))
+                i+=1
+                time.sleep(1)
+
+
+    def try_arm(self):
+        self.arm()
+        msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+        # while msg.system_status != mavutil.mavlink.MAV_STATE_ACTIVE:
+        while not msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED:
+            self.arm()
+            msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+            print(msg)
+
+    def from_disarm_to_point(self, takeoff_alt,lat, lon, alt):
+        self.set_mode("GUIDED")
+        msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+        i = 0
+        print("MAV STATE: {}", msg.system_status)
+        while msg.system_status != mavutil.mavlink.MAV_STATE_STANDBY:
+            print("Waiting for pre-arm checks to pass", end="")
+            print('.' * (i%4 + 1))
+            i+=1
+            msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+            time.sleep(1)
+
+        self.try_arm()
+        while not self.is_taking_off():
+            self.set_mode("GUIDED")
+            if not msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED:
+                self.try_arm()
+            print("taking off: ", self.is_taking_off())
+            self.takeoff(takeoff_alt)
+        self.wait_takeoff(takeoff_alt)
+
+        self.go_to(lat, lon, alt)
+        drone_lat, drone_lon, drone_alt = self.get_position()
+        print("Flying", end='')
+        while not self.has_arrived(lat, lon, alt):
+            print('.',end="")
+            time.sleep(2)
+            msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+            print(msg)
+        print("Drone arrived")
+        self.land()
+        self.disarm()
+
+    def follow_waypoints(self, waypoints_file):
+        takeoff_alt = 70
+        self.set_mode("GUIDED")
+        msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+        i = 0
+        print(self.master.target_system, "MAV STATE: {}", msg.system_status)
+        while msg.system_status != mavutil.mavlink.MAV_STATE_STANDBY:
+            print("Waiting for pre-arm checks to pass", end="")
+            print('.' * (i%4 + 1))
+            i+=1
+            msg = self.master.recv_match(type='HEARTBEAT', blocking=True)
+            time.sleep(1)
+
+        self.try_arm()
+        while not self.is_taking_off():
+            self.set_mode("GUIDED")
+            if not msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED:
+                self.try_arm()
+            print("taking off: ", self.is_taking_off())
+            self.takeoff(takeoff_alt)
+        self.wait_takeoff(takeoff_alt)
+
+        self.load_mission(waypoints_file)
+
+        self.set_mode("AUTO")
+
+    def load_mission(self, waypoints_file):
+        """
+        Load a mission file and upload it to the drone.
+        
+        Args:
+            master: MAVLink connection to the SITL or vehicle.
+            waypoints_file: Path to the QGC WPL 110 formatted waypoints file.
+        """
+        try:
+            # Open the waypoints file
+            with open(waypoints_file, "r") as file:
+                lines = file.readlines()
+
+            # Check if the file is in the correct format
+            if lines[0].strip() != "QGC WPL 110":
+                raise ValueError("Invalid waypoints file format. Expected 'QGC WPL 110'.")
+
+            # Parse waypoints
+            waypoints = []
+            for line in lines[1:]:
+                fields = line.strip().split("\t")
+                if len(fields) < 12:
+                    continue  # Skip invalid lines
+                seq, current, frame, command, *params, lat, lon, alt, autocontinue = fields
+                waypoints.append(
+                    mavutil.mavlink.MAVLink_mission_item_int_message(
+                        target_system=self.master.target_system,
+                        target_component=self.master.target_component,
+                        seq=int(seq),
+                        frame=int(frame),
+                        command=int(command),
+                        current=int(current),
+                        autocontinue=int(autocontinue),
+                        param1=float(params[0]),
+                        param2=float(params[1]),
+                        param3=float(params[2]),
+                        param4=float(params[3]),
+                        x=int(float(lat) * 1e7),  # Latitude in 1E7 format
+                        y=int(float(lon) * 1e7),  # Longitude in 1E7 format
+                        z=float(alt)             # Altitude
+                    )
+                )
+
+            # Clear any existing waypoints
+            print("Clearing existing waypoints...")
+            self.master.mav.mission_clear_all_send(self.master.target_system, self.master.target_component)
+
+            # Send mission count
+            print(f"Uploading {len(waypoints)} waypoints...")
+            self.master.mav.mission_count_send(self.master.target_system, self.master.target_component, len(waypoints))
+
+            # Send waypoints one by one
+            for waypoint in waypoints:
+                msg = self.master.recv_match(type="MISSION_REQUEST", blocking=True)
+                if not msg:
+                    raise RuntimeError("MISSION_REQUEST not received. Upload failed.")
+                seq = msg.seq
+                self.master.mav.send(waypoints[seq])
+                print(f"Waypoint {seq} uploaded.")
+
+            print("Mission upload complete!")
+        
+        except Exception as e:
+            print(f"Error: {e}")
+
+def convert_to_qgc_wpl(coords, filename):
+    """
+    Convert coordinates to QGC WPL 110 format.
+    
+    Args:
+        coords (list of tuples): List of (lat, lon, alt) coordinates.
+        
+    Returns:
+        str: Waypoints in QGC WPL 110 format.
+    """
+    # Header for QGC WPL 110
+    wpl_format = "QGC WPL 110\n"
+    for i, (lat, lon) in enumerate(coords):
+        # Format: seq, current, frame, command, params 1–4, lat, lon, alt, auto-continue
+        wpl_format += (
+            f"{i}\t"  # Sequence number
+            f"{0}\t"  # Current (1 for first waypoint, 0 otherwise)
+            f"3\t"  # Frame (3 = MAV_FRAME_GLOBAL_RELATIVE_ALT)
+            f"16\t"  # Command (16 = MAV_CMD_NAV_WAYPOINT)
+            f"0.00000000\t0.00000000\t0.00000000\t0.00000000\t"  # Unused parameters
+            f"{lat:.7f}\t"  # Latitude
+            f"{lon:.7f}\t"  # Longitude
+            f"{70:.6f}\t"  # Altitude
+            f"1\n"  # Auto-continue
+        )
+    with open(filename, "w") as file:
+        file.write(wpl_format)
+
+    return wpl_format
+
+def pass_coords_start_waypoints(waypoints, id):
+    filename = f"mission{id}.waypoints"
+    convert_to_qgc_wpl(waypoints, filename)
+    connection_string = f"udp:127.0.0.1:1455{id}"
+    controler = DroneController(connection_string=connection_string)
+    controler.follow_waypoints(filename)
+
+
+
+# def main():
+    # string = "udp:127.0.0.1:1455" + id
+    # print(string)
+    # controler = DroneController(string)
+    # controler.follow_waypoints(waypoints[0])
 
 
 
 if __name__=="__main__":
-    main()
+    waypoints = [
+        [(54.35178115527114, 18.6429333626047), (54.35179366095162, 18.641731733073694), (54.35153104086252, 18.64092707044133)],
+        [(54.35064937543097, 18.6374187413642), (54.35220009349511, 18.63737582602381), (54.35146851202252, 18.633931869957273)],
+        [(54.35433534862309, 18.648386844758452), (54.35449791206713, 18.651755698979304), (54.35379138165285, 18.644717583154854)],
+    ]
+
+    pass_coords_start_waypoints(waypoints[0], 0)
