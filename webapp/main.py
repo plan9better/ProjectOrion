@@ -4,6 +4,8 @@ import osmnx as ox
 from flask_socketio import SocketIO, emit
 import asyncio
 import sitl.controler
+import sitl.listener
+import json
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -68,19 +70,23 @@ def parse_data(data):
     emit('data_response', {'status': 'ok'})
 
 async def update_drone_data():
+        pt1lat = 54.5321
+        pt2lat = 54.5321
+        pt1lon = 54.5321
+        pt2lon = 54.5221
+        number_of_drones = 5
+        data = sitl.controler.start_drones((pt1lat, pt1lon), (pt2lat, pt2lon), number_of_drones)
         while True:
-            pt1lat = 54.5321
-            pt2lat = 54.5321
-            pt1lon = 54.5321
-            pt2lon = 54.5221
-            number_of_drones = 3
-            data = sitl.controler.good_name((pt1lat,pt1lon),(pt2lat,pt2lon),number_of_drones)
-            socketio.emit('drone_info', data)
+
+            string_data  = await sitl.listener.listen_for_messages()
+            json_obj = json.loads(string_data)
+
+            socketio.emit('drone_info', json_obj)
             await asyncio.sleep(2)
 
 
 
-@socketio.on("send_drones")
+@socketio.on("send_dlrones")
 def send_drones(data):
     print("the drones have been sent")
     asyncio.run_coroutine_threadsafe(update_drone_data(), asyncio.get_event_loop())

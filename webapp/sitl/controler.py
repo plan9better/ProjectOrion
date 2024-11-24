@@ -605,7 +605,7 @@ if __name__=="__main__":
     for thread in threads:
         thread.join()
 
-def good_name(paths, n):
+def start_drones(paths, n):
     threads = []
     for i in range(n):
         threads.append(threading.Thread(target=pass_coords_start_waypoints, args=(paths[i],i,)))
