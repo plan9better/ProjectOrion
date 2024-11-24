@@ -587,7 +587,7 @@ async def start_websocket_server():
     # Run the broadcast coroutine and server concurrently
     await asyncio.gather(server.wait_closed(), broadcast_messages())
 
-def main(paths, n):
+def good_name(paths, n):
     threads = []
     for i in range(n):
         threads.append(threading.Thread(target=pass_coords_start_waypoints, args=(paths[i],i,)))
