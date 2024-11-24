@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Drone Routing System</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
     <!-- Leaflet CSS -->
     <link
       rel="stylesheet"
@@ -13,28 +16,28 @@
       crossorigin=""
     />
   </head>
-      <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
   <body>
     <div id="map"></div>
 
     <div id="drone-list" class="floating-ui">
       <h2>Aviable drones</h2>
       <ul id="drone-status"></ul>
-          <div id="droneInfo">
+      <div id="droneInfo">
         <!-- Drone info will be displayed here -->
-    </div>
+      </div>
     </div>
 
     <!-- Planning Menu -->
     <div id="planning-menu" class="floating-ui">
       <h2>Planning</h2>
       <label for="point-select">Select Points:</label>
-      <button id="add-point">Add Point</button>
-      <button id="add-area">Select Area</button>
-
+      <select id="tool-select">
+        <option value="add-point">Add Point</option>
+        <option value="add-area">Select Area</option>
+      </select>
 
       <button id="start_drones">Start drones</button>
-
     </div>
 
     <!-- Action Menu -->
@@ -52,13 +55,14 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-<!--    <script type="application/json" id="flask-data">-->
-<!--        {  }-->
-<!--    </script>-->
+    <!--    <script type="application/json" id="flask-data">-->
+    <!--        {  }-->
+    <!--    </script>-->
 
-
-
-
-    <script defer type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script
+      defer
+      type="module"
+      src="{{ url_for('static', filename='js/app.js') }}"
+    ></script>
   </body>
 </html>

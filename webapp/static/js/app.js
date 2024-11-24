@@ -1,9 +1,11 @@
 "use strict";
 
 import DroneManager from "./bussines/droneSystems/DroneManager.js";
+import ConnectionManager from "./bussines/ConnectionManager.js";
+import MapManager from "./bussines/MapManager.js";
 
-
-let map = L.map("map", { zoomControl: false }).setView(
+// Initialize map
+const map = L.map("map", { zoomControl: false }).setView(
   [54.352433, 18.647782],
   16
 );
@@ -12,131 +14,103 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 
-const socket = io.connect('http://' + document.domain + ':' + location.port);
+// Initialize managers
+const droneManager = new DroneManager();
+const connectionManager = new ConnectionManager(
+  `http://${document.domain}:${location.port}`
+);
+const mapManager = new MapManager(map);
 
-document.addEventListener('DOMContentLoaded', function () {
-
-
-
-    var startDronesBtn = document.getElementById('start_drones');
-    var selectAreaBtn = document.getElementById('add-area')
-    var selectPointBtn = document.getElementById('add-point')
-    selectAreaBtn.addEventListener('click', function() {
-        map.off()
-        defineAreaModeBehaviour()
-    });
-    selectPointBtn.addEventListener('click', function() {
-        map.off()
-        map.on("click", onMapClickPointMode);
-
-    });
-
-
-
-
-
-
-
-
-    startDronesBtn.addEventListener('click', function() {
-        console.log("Start Drones button clicked!");
-
-        socket.emit('send_drones', { message: 'Start the drones' });
-
-        socket.on('drone_response', function(data) {
-                    console.log("Response received!");
-
-        });
-    });
-
-
-
-
-
-
-    const droneManager = new DroneManager();
-
-    socket.on('drone_info', function(data) {
-    console.log("Received updated drone info:", data);
-
-    droneManager.createDronesFromJSON(data);
-    droneManager.renderDrones("drone-status");
+// WebSocket listeners
+connectionManager.on("drone_info", (data) => {
+  console.log("Received updated drone info:", data);
+  droneManager.createDronesFromJSON(data);
+  droneManager.renderDrones("drone-status");
 });
 
-
+connectionManager.on("point_response", (data) => {
+  console.log("Point received:", data.point);
 });
 
+// Add event listeners for UI interactions
+document.addEventListener("DOMContentLoaded", () => {
+  let toolSelection = document.getElementById("tool-select");
+  const startDronesButton = document.getElementById("start_drones");
+  console.log(toolSelection.value);
 
+  map.on("mousedown", (e) => {
+    if (toolSelection.value == "add-point") {
+      console.log("add-point");
+      if (mapManager.getRectangle != null) {
+        mapManager.clearRectangle();
+      }
+      if (mapManager.points.length > 0) {
+        mapManager.clearPoints();
+      }
+      mapManager.addPoint(e.latlng);
+    } else {
+      console.log("start-rectangle");
+      mapManager.disableInteractions();
+      let startPoint = e.latlng;
+      if (mapManager.rectangle != null) {
+        mapManager.clearRectangle();
+      }
+      map.on("mouseup", (f) => {
+        console.log("add-rectangle");
+        let endPoint = f.latlng;
+        mapManager.addRectangle(startPoint, endPoint);
+        endPoint = null;
+      });
+    }
+  });
 
+  // Enable point mode
+  // pointButton.addEventListener("click", () => {
+  //   if (mapManager.getRectangle()) {
+  //     mapManager.clearRectangle();
+  //   }
+  //   console.log("Point mode enabled.");
+  //   mapManager.disableInteractions();
 
+  //   map.on("click", (e) => {
+  //     console.log("Point clicked at:", e.latlng);
+  // mapManager.addPoint(e.latlng);
+  //   });
+  //   map.on("mouseup", () => {
+  //     mapManager.enableInteractions();
+  //   });
+  // });
 
+  // // Enable area selection mode
+  // areaButton.addEventListener("click", () => {
+  //   console.log("Area mode enabled.");
+  //   mapManager.disableInteractions();
+  //   mapManager.clearPoints();
+  //   let startPoint = null;
 
-let popup = L.popup();
+  //   map.on("mousedown", (e) => {
+  //     startPoint = e.latlng; // Top-left corner of the rectangle
+  //   });
 
-function onMapClickPointMode(e) {
+  //   map.on("mouseup", (e) => {
+  //     if (startPoint) {
+  //       const endPoint = e.latlng; // Bottom-right corner
+  //       mapManager.addRectangle(startPoint, endPoint);
+  //       console.log("Rectangle Coordinates:", mapManager.getRectangleBounds());
 
-  popup
-    .setLatLng(e.latlng)
-    .setContent("You clicked the map at " + e.latlng.toString())
-    .openOn(map);
-    socket.emit('add_point', { point: e.latlng });
-      socket.on('point_response', function(data) {
-                    console.log("point received!");
-                    console.log(data.point)
+  //       startPoint = null; // Reset for next selection
+  //       mapManager.enableInteractions();
+  //     }
+  //   });
+  // });
 
-        });
-
-}
-
-
-function defineAreaModeBehaviour(e) {
-    console.log("area mode")
-
-    let startPoint = null; // To store the starting corner of the rectangle
-        let rectangle = null; // To store the drawn rectangle
-
-        // Capture the mousedown event (start drawing)
-        map.on('mousedown', function (e) {
-            startPoint = e.latlng; // Store the top-left corner
-        });
-
-        // Capture the mouseup event (finish drawing)
-        map.on('mouseup', function (e) {
-            if (startPoint) {
-                let endPoint = e.latlng; // Bottom-right corner
-
-                // Remove the previous rectangle (if any)
-                if (rectangle) {
-                    map.removeLayer(rectangle);
-                }
-
-                // Draw a rectangle
-                rectangle = L.rectangle([startPoint, endPoint], {
-                    color: 'red',
-                    weight: 2,
-                }).addTo(map);
-
-                // Send rectangle coordinates to the server
-                const rectangleBounds = {
-                    topLeft: { lat: startPoint.lat, lng: startPoint.lng },
-                    bottomRight: { lat: endPoint.lat, lng: endPoint.lng }
-                };
-
-                console.log('Rectangle Coordinates:', rectangleBounds);
-
-                fetch('/draw-rectangle', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(rectangleBounds),
-                })
-                .then(response => response.json())
-                .then(data => console.log('Response from server:', data))
-                .catch(error => console.error('Error:', error));
-
-                // Reset startPoint for the next rectangle
-                startPoint = null;
-            }
-        });
-}
+  // Start drones
+  startDronesButton.addEventListener("click", () => {
+    console.log("Start Drones button clicked!");
+    connectionManager.emit(
+      MapManager.getRectangle
+        ? MapManager.getRectangleBounds
+        : MapManager.getPoints
+    );
+  });
+});
