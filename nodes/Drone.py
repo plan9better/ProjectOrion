@@ -1,6 +1,6 @@
-from Map import Map
+from nodes.Map import Map
 import math
-from utils import haversine
+from nodes.utils import haversine
 
 
 

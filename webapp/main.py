@@ -28,7 +28,6 @@ def get_mission_data():
     # nodes_list = cacluclate_points(altitude,no_drones,starting posints,mission_coordinates)
     pass
 
-
 @socketio.on("add_point")
 def add_point(point):
     # mission_data.append(point)

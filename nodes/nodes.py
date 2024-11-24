@@ -1,7 +1,7 @@
-from Drone import Drone
-from utils import set_map_for_drone
-from point_in_direction import *
-from Map import Map
+from nodes.Drone import Drone 
+from nodes.utils import set_map_for_drone
+from nodes.point_in_direction import *
+from nodes.Map import Map
 from geopy.distance import distance
 
 def generate_nodes(coordinate1: tuple, coordinate2: tuple, no_drones: int, altitude: dict):

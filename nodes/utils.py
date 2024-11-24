@@ -1,4 +1,4 @@
-from Map import Map
+from nodes.Map import Map
 import math
 def set_map_for_drone(drone_map: Map, drones: list):
     number_of_drones = len(drones)

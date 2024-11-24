@@ -3,12 +3,18 @@ import time
 import math
 from math import radians, cos, sin, sqrt, atan2
 import sys
+from nodes import nodes
+import asyncio
+import websockets
 
+import threading
+positions = {}
 class DroneController:
     def __init__(self, connection_string="udp:127.0.0.1:14550"):
         """
         Initialize the drone controller and establish connection.
         """
+        self.connection_string = connection_string
         self.master = mavutil.mavlink_connection(connection_string)
         print("Waiting for heartbeat...")
         self.master.wait_heartbeat()
@@ -150,8 +156,8 @@ class DroneController:
         """
         print("Fetching current position...")
         msg = self.master.recv_match(type="GLOBAL_POSITION_INT", blocking=True)
-        latitude = msg.lat / 1e7
-        longitude = msg.lon / 1e7
+        latitude = msg.lat  / 1e7
+        longitude = msg.lon  / 1e7
         altitude = msg.relative_alt / 1e3  # Convert from mm to meters
         print(f"Current Position: lat={latitude}, lon={longitude}, alt={altitude}")
         return latitude, longitude, altitude
@@ -442,7 +448,10 @@ class DroneController:
         self.load_mission(waypoints_file)
 
         self.set_mode("AUTO")
-
+        while True:
+            lat, lon, alt = self.get_position()
+            pos = (lat, lon, alt)
+            positions[self.connection_string[-1]] = pos
     def load_mission(self, waypoints_file):
         """
         Load a mission file and upload it to the drone.
@@ -545,21 +554,53 @@ def pass_coords_start_waypoints(waypoints, id):
     controler = DroneController(connection_string=connection_string)
     controler.follow_waypoints(filename)
 
+connected_clients = set()
 
+async def handle_connection(websocket):
+    # Add new connection to the set of clients
+    connected_clients.add(websocket)
+    print(f"New client connected: {websocket.remote_address}")
 
-# def main():
-    # string = "udp:127.0.0.1:1455" + id
-    # print(string)
-    # controler = DroneController(string)
-    # controler.follow_waypoints(waypoints[0])
+    try:
+        # Keep the connection open
+        await websocket.wait_closed()
+    finally:
+        # Remove client when disconnected
+        connected_clients.remove(websocket)
+        print(f"Client disconnected: {websocket.remote_address}")
 
+async def broadcast_messages():
+    while True:
+        message = str(positions)
+        if connected_clients:  # Only send if there are connected clients
+            print(f"Broadcasting: {message}")
+            await asyncio.gather(
+                *[client.send(message) for client in connected_clients],
+                return_exceptions=True  # To handle disconnections gracefully
+            )
+        await asyncio.sleep(1)  # Broadcast every 1 second
+
+async def start_websocket_server():
+    server = await websockets.serve(handle_connection, "localhost", 8765)
+    print("WebSocket server started on ws://localhost:8765")
+
+    # Run the broadcast coroutine and server concurrently
+    await asyncio.gather(server.wait_closed(), broadcast_messages())
 
 
 if __name__=="__main__":
-    waypoints = [
-        [(54.35178115527114, 18.6429333626047), (54.35179366095162, 18.641731733073694), (54.35153104086252, 18.64092707044133)],
-        [(54.35064937543097, 18.6374187413642), (54.35220009349511, 18.63737582602381), (54.35146851202252, 18.633931869957273)],
-        [(54.35433534862309, 18.648386844758452), (54.35449791206713, 18.651755698979304), (54.35379138165285, 18.644717583154854)],
-    ]
+    paths = nodes.generate_nodes((54.35501060794694, 18.62539495114291),(54.341553348058824, 18.704445008146802), 3, {0: 70, 1: 70, 2: 70})
+    threads = []
+    for i in range(3):
+        threads.append(threading.Thread(target=pass_coords_start_waypoints, args=(paths[i],i,)))
+        # pass_coords_start_waypoints(paths[i], i)
 
-    pass_coords_start_waypoints(waypoints[0], 0)
+    # threads.append(threading.Thread(target=start_websocket_server))
+    for thread in threads:
+        thread.start()
+    # while True:
+    #     print(positions)
+    #     time.sleep(1)
+    asyncio.run(start_websocket_server())
+    for thread in threads:
+        thread.join()
