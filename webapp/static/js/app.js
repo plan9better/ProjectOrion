@@ -19,6 +19,7 @@ const droneManager = new DroneManager();
 const connectionManager = new ConnectionManager(
   `http://${document.domain}:${location.port}`
 );
+
 const mapManager = new MapManager(map);
 
 // WebSocket listeners
@@ -38,79 +39,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const startDronesButton = document.getElementById("start_drones");
   console.log(toolSelection.value);
 
+  let startPoint = null;
+  let endPoint = null;
+
   map.on("mousedown", (e) => {
-    if (toolSelection.value == "add-point") {
-      console.log("add-point");
-      if (mapManager.getRectangle != null) {
-        mapManager.clearRectangle();
-      }
-      if (mapManager.points.length > 0) {
-        mapManager.clearPoints();
-      }
+    mapManager.disableInteractions();
+    if (toolSelection.value === "add-point") {
+      if (mapManager.getRectangle()) mapManager.clearRectangle();
       mapManager.addPoint(e.latlng);
     } else {
-      console.log("start-rectangle");
-      mapManager.disableInteractions();
-      let startPoint = e.latlng;
-      if (mapManager.rectangle != null) {
-        mapManager.clearRectangle();
-      }
-      map.on("mouseup", (f) => {
-        console.log("add-rectangle");
-        let endPoint = f.latlng;
-        mapManager.addRectangle(startPoint, endPoint);
-        endPoint = null;
-      });
+      console.log("AAAAA");
+      if (mapManager.getPoints()) mapManager.clearPoints();
+      startPoint = e.latlng; // Persist the startPoint for later use
     }
   });
 
-  // Enable point mode
-  // pointButton.addEventListener("click", () => {
-  //   if (mapManager.getRectangle()) {
-  //     mapManager.clearRectangle();
-  //   }
-  //   console.log("Point mode enabled.");
-  //   mapManager.disableInteractions();
-
-  //   map.on("click", (e) => {
-  //     console.log("Point clicked at:", e.latlng);
-  // mapManager.addPoint(e.latlng);
-  //   });
-  //   map.on("mouseup", () => {
-  //     mapManager.enableInteractions();
-  //   });
-  // });
-
-  // // Enable area selection mode
-  // areaButton.addEventListener("click", () => {
-  //   console.log("Area mode enabled.");
-  //   mapManager.disableInteractions();
-  //   mapManager.clearPoints();
-  //   let startPoint = null;
-
-  //   map.on("mousedown", (e) => {
-  //     startPoint = e.latlng; // Top-left corner of the rectangle
-  //   });
-
-  //   map.on("mouseup", (e) => {
-  //     if (startPoint) {
-  //       const endPoint = e.latlng; // Bottom-right corner
-  //       mapManager.addRectangle(startPoint, endPoint);
-  //       console.log("Rectangle Coordinates:", mapManager.getRectangleBounds());
-
-  //       startPoint = null; // Reset for next selection
-  //       mapManager.enableInteractions();
-  //     }
-  //   });
-  // });
+  map.on("mouseup", (e) => {
+    console.log("WWWW");
+    mapManager.enableInteractions();
+    console.log("Start point" + startPoint);
+    if (startPoint != null) {
+      endPoint = e.latlng;
+      console.log("End point" + endPoint);
+      mapManager.addRectangle(startPoint, endPoint);
+      startPoint = null; // Reset after use
+      endPoint = null;
+    }
+  });
 
   // Start drones
   startDronesButton.addEventListener("click", () => {
-    console.log("Start Drones button clicked!");
-    connectionManager.emit(
-      MapManager.getRectangle
-        ? MapManager.getRectangleBounds
-        : MapManager.getPoints
-    );
+    const rectangleBounds = mapManager.getRectangle()
+      ? mapManager.getRectangle().getBounds()
+      : null;
+    const points = mapManager.getPoints();
+    console.log(rectangleBounds);
+    console.log(points);
+    connectionManager.emit("send_drones", rectangleBounds || points);
   });
 });
