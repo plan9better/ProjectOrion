@@ -51,7 +51,6 @@ def draw_rectangle():
 def add_point(point):
 
     print(point)
-    point = []
     emit('point_response', {'point': point})
 
 
