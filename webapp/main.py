@@ -78,15 +78,15 @@ async def update_drone_data():
         data = sitl.controler.start_drones((pt1lat, pt1lon), (pt2lat, pt2lon), number_of_drones)
         while True:
 
-            string_data  = await sitl.listener.listen_for_messages()
-            json_obj = json.loads(string_data)
-
+            # string_data  = await sitl.listener.listen_for_messages()
+            # json_obj = json.loads(string_data)
+            json_obj = {'a' : 'a'}
             socketio.emit('drone_info', json_obj)
             await asyncio.sleep(2)
 
 
 
-@socketio.on("send_dlrones")
+@socketio.on("send_drones")
 def send_drones(data):
     print("the drones have been sent")
     asyncio.run_coroutine_threadsafe(update_drone_data(), asyncio.get_event_loop())
@@ -101,7 +101,8 @@ def handle_connect():
     {"id": 3, "name": "Drone Gamma", "battery": 100, "isSelected": False, "altitude": 0,"on_mission" : False,'lat' : 0, 'lon' : 0},
     {"id": 4, "name": "Drone Delta", "battery": 100, "isSelected": False, "altitude": 0,"on_mission" : False,'lat' : 0, 'lon' : 0},
 ]
-    # Send data to the client (browser)
+
+
     emit('drone_info', drone_info)
 
 

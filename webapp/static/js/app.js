@@ -28,7 +28,7 @@ connectionManager.on("drone_info", (data) => {
   droneManager.createDronesFromJSON(data);
   droneManager.renderDrones("drone-status");
 
-  for(let i = 0; i < 5, i++){
+  for(let i = 0; i < 5; i++){
   dict_key = data[i].toString()
   console.log(data[disct_key])
   }
