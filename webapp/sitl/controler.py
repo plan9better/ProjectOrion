@@ -587,11 +587,10 @@ async def start_websocket_server():
     # Run the broadcast coroutine and server concurrently
     await asyncio.gather(server.wait_closed(), broadcast_messages())
 
-
-if __name__=="__main__":
-    paths = nodes.generate_nodes((54.35501060794694, 18.62539495114291),(54.341553348058824, 18.704445008146802), 3, {0: 70, 1: 70, 2: 70})
+def good_name(coord1, coord2, n):
+    paths = nodes.generate_nodes(coord1, coord2, n, ({0: 70, 1: 70, 2: 70}))
     threads = []
-    for i in range(3):
+    for i in range(n):
         threads.append(threading.Thread(target=pass_coords_start_waypoints, args=(paths[i],i,)))
         # pass_coords_start_waypoints(paths[i], i)
 
@@ -604,6 +603,10 @@ if __name__=="__main__":
     asyncio.run(start_websocket_server())
     for thread in threads:
         thread.join()
+
+
+if __name__=="__main__":
+    main(paths)
 
 def start_drones(paths, n):
     threads = []

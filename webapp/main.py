@@ -31,8 +31,6 @@ def get_mission_data():
     # nodes_list = cacluclate_points(altitude,no_drones,starting posints,mission_coordinates)
     pass
 
-
-
 # @app.route('/draw-rectangle', methods=['POST'])
 # def draw_rectangle():
 #     # Get the rectangle data sent from the client
@@ -83,6 +81,7 @@ async def update_drone_data():
             json_obj = {'a' : 'a'}
             socketio.emit('drone_info', json_obj)
             await asyncio.sleep(2)
+
 
 
 
