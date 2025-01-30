@@ -604,5 +604,22 @@ def good_name(coord1, coord2, n):
     for thread in threads:
         thread.join()
 
+
 if __name__=="__main__":
     main(paths)
+
+def start_drones(paths, n):
+    threads = []
+    for i in range(n):
+        threads.append(threading.Thread(target=pass_coords_start_waypoints, args=(paths[i],i,)))
+        # pass_coords_start_waypoints(paths[i], i)
+
+    # threads.append(threading.Thread(target=start_websocket_server))
+    for thread in threads:
+        thread.start()
+    # while True:
+    #     print(positions)
+    #     time.sleep(1)
+    asyncio.run(start_websocket_server())
+    for thread in threads:
+        thread.join()

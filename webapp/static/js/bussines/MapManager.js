@@ -15,7 +15,6 @@ export default class MapManager {
     this.map.doubleClickZoom.disable();
     this.map.scrollWheelZoom.disable();
     this.map.boxZoom.disable();
-    this.map.keyboard.disable();
   }
 
   // Enable map interactions
@@ -24,7 +23,6 @@ export default class MapManager {
     this.map.doubleClickZoom.enable();
     this.map.scrollWheelZoom.enable();
     this.map.boxZoom.enable();
-    this.map.keyboard.enable();
   }
 
   // Add a point to the map and list
@@ -66,8 +64,10 @@ export default class MapManager {
   }
 
   clearRectangle() {
-    if (this.rectangle != null) {
+    if (this.rectangle) {
       this.rectangle.remove();
+      this.rectangle = null;
+      this.rectangle_bounds = null;
     }
   }
 }
